@@ -1,0 +1,60 @@
+{
+	"Name": "Querschnitt",
+	"Description": "Dev tool",
+	"LoadPriority": 1,
+	"RequiredOnClient": true,
+	"Version": "1.0.0",
+	"Dependencies": {
+		"CLIENT_HAS_UEBERBLICK": "Ueberblick"
+	},
+	"Scripts": [
+		{
+			"Path": "ueberblick_2.nut",
+			"RunOn": "CLIENT || SERVER || UI",
+			"ClientCallback": {
+				"Before": "InitUeberblick2"
+			},
+			"ServerCallback": {
+				"Before": "InitUeberblick2"
+			},
+			"UICallback": {
+				"Before": "InitUeberblick2"
+			}
+		},
+		{
+			"Path": "sh_devtools.nut",
+			"RunOn": "SERVER || CLIENT || UI"
+		},
+		{
+			"Path": "t_scripts.nut",
+			"RunOn": "SERVER || CLIENT || UI"
+		},
+		{
+			"Path": "weapons/mp_dev_info_gun.nut",
+			"RunOn": "CLIENT || SERVER",
+			"ClientCallback": {
+				"After": "DevInfoGunInit"
+			},
+			"ServerCallback": {
+				"After": "DevInfoGunInit"
+			}
+		},
+		{
+			"Path": "sh_networked_devtools.nut",
+			"RunOn": "CLIENT || SERVER",
+			"ClientCallback": {
+				"Before": "DevTools_Network"
+			},
+			"ServerCallback": {
+				"Before": "DevTools_Network"
+			}
+		},
+		{
+			"Path": "debug_commands.nut",
+			"RunOn": "SERVER",
+			"ServerCallback": {
+				"Before": "DebugCommandsInit"
+			}
+		}
+	]
+}
