@@ -22,6 +22,13 @@
 			}
 		},
 		{
+			"Path": "debug_commands.nut",
+			"RunOn": "SERVER || CLIENT || UI",
+			"ServerCallback": {
+				"Before": "DebugCommandsInit"
+			}
+		},
+		{
 			"Path": "sh_devtools.nut",
 			"RunOn": "SERVER || CLIENT || UI"
 		},
@@ -41,19 +48,12 @@
 		},
 		{
 			"Path": "sh_networked_devtools.nut",
-			"RunOn": "CLIENT || SERVER",
+			"RunOn": "CLIENT || SERVER || UI",
 			"ClientCallback": {
 				"Before": "DevTools_Network"
 			},
 			"ServerCallback": {
 				"Before": "DevTools_Network"
-			}
-		},
-		{
-			"Path": "debug_commands.nut",
-			"RunOn": "SERVER",
-			"ServerCallback": {
-				"Before": "DebugCommandsInit"
 			}
 		}
 	]

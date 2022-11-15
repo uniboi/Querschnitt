@@ -1,9 +1,21 @@
 untyped
 
+#if UI
+global function NetworkedServerCommandUIScriptSafeCallback
+
+void function NetworkedServerCommandUIScriptSafeCallback( string script )
+{
+	executor = GetLocalClientPlayer()
+	errcall( script )
+	executor = null
+}
+#elseif CLIENT || SERVER
 global function DevTools_Network
 global function TraceFromEnt
 global function DrawNetwork
 global function ReplacedCommand
+#endif
+
 #if CLIENT
 global function RegisterDrawParams
 
@@ -14,6 +26,7 @@ struct {
 global function DrawGlobal
 #endif
 
+#if CLIENT || SERVER
 string function ReplacedCommand( string cmd )
 {
 	string msg = cmd
@@ -125,6 +138,15 @@ int function GetDrawID( string type )
 	}
 	unreachable
 }
+
+TraceResults function TraceFromEnt( entity p )
+{
+	TraceResults traceResults = TraceLineHighDetail( p.EyePosition(),
+	p.EyePosition() + p.GetViewVector() * 10000,
+	p, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
+	return traceResults
+}
+#endif
 
 #if SERVER
 void function DrawNetwork( entity player, string type, ... )
@@ -267,23 +289,26 @@ void function DrawNetwork( string type, ... )
 
 void function ServerCommandCLIENTScriptSafeCallback( array<string> args )
 {
-	string msg = ReplacedCommand( StringReplace( CombineArgs( args ), ":", ";" ) )
-	entity executor = GetLocalClientPlayer()
-	errcall( "printinexplicit(" + msg + ")" )
+	string msg = format( "printinexplicit(function(){return %s}())", ReplacedCommand( StringReplace( CombineArgs( args ), ":", ";" ) ) )
+	executor = GetLocalClientPlayer()
+	// var result
+	// try {
+	// 	result = compilestring( msg )()
+	// } catch( e ) {
+	// 	result = "ERROR:" + e + "\n[PREPROCESSED] " + msg 
+	// }
+	// printinexplicit( result )
+	errcall( msg )
+	// printt(getstackinfos(1).locals)
+	// foreach( var p in getstackinfos(1).locals )
+	// 	print(p)
+	executor = null
+	// errcall( "printinexplicit(" + msg + ")" )
 }
 
 void function ServerCommandUIScriptSafeCallback( array<string> args )
 {
-	string msg = ReplacedCommand( StringReplace( CombineArgs( args ), ":", ";" ) )
-	entity executor = GetLocalClientPlayer()
-	errcall( "printinexplicit(" + msg + ")" )
+	string msg = format( "printinexplicit(function(){return %s}())", ReplacedCommand( StringReplace( CombineArgs( args ), ":", ";" ) ) )
+	RunUIScript( "NetworkedServerCommandUIScriptSafeCallback", msg )
 }
 #endif
-
-TraceResults function TraceFromEnt( entity p )
-{
-	TraceResults traceResults = TraceLineHighDetail( p.EyePosition(),
-	p.EyePosition() + p.GetViewVector() * 10000,
-	p, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
-	return traceResults
-}

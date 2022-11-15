@@ -1,5 +1,8 @@
-global function DebugCommandsInit
+#if CLIENT || UI || SERVER
 global entity executor
+#endif
+#if SERVER
+global function DebugCommandsInit
 
 void function DebugCommandsInit()
 {
@@ -50,3 +53,4 @@ array<string> function ScriptCommandErrCallReplace( array<string> args )
 	}
 	return args
 }
+#endif

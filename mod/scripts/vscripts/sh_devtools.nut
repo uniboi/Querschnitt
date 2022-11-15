@@ -3,11 +3,13 @@ globalize_all_functions
 
 void function errcall( string script, entity initiator = null )
 {
+	var result
 	try {
-		compilestring( script )()
+		result = compilestring( script )()
 	} catch( e ) {
-		printt( "ERROR:" + e + "\n" + script )
+		result = "ERROR:" + e + "\n[PREPROCESSED] " + script 
 	}
+	printinexplicit( result )
 }
 
 string function allcontents( var v, string pre = "" )
