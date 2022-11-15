@@ -46,42 +46,59 @@ string function tablecontents( table tbl, string pre = "" )
 
 string function entitycontents( entity e, string pre = "" )
 {
-	#if UI
-	return "( UI doesn't have any info )"
-	#else
-	string scriptName = e.GetScriptName()
-	string className = e.GetClassName()
-	string origin = e.GetOrigin().tostring()
-	string angles = e.GetAngles().tostring()
-	string assetName = e.GetModelName().tostring()
-	string team
+	int LONGEST_KEY_LEN
 
-	switch ( e.GetTeam() )
+	table<string, string> contents
+	#if UI
+
+	#else
+	contents.name <- e.GetScriptName()
+	contents["class"] <- e.GetClassName()
+	contents.origin <- e.GetOrigin().tostring()
+	contents.angles <- e.GetAngles().tostring()
+	contents.team <- GetFormattedTeam( e.GetTeam() )
+
+	if ( !contents.name.len() )
+		contents.name = "( NO SCRIPT NAME )"
+	#endif
+
+
+	foreach( k, v in contents )
 	{
-		case TEAM_MILITIA:
-			team = format( "militia (%i)", TEAM_MILITIA )
-			break
-		case TEAM_IMC:
-			team = format( "imc (%i)", TEAM_IMC )
-			break
-		case TEAM_UNASSIGNED:
-			team = format( "neutral (%i)", TEAM_UNASSIGNED )
-			break
-		default:
-			team = format( "ffa %i", e.GetTeam() )
+		int l = k.len()
+		if( l > LONGEST_KEY_LEN )
+			LONGEST_KEY_LEN = l
 	}
 
-	if ( !scriptName.len() )
-		scriptName = "( NO SCRIPT NAME )"
+	string result = expect string( e.tostring() )
 
-	return e.tostring() +
-		"\n" + pre + "# name   : " + scriptName + 
-		"\n" + pre + "# class  : " + className +
-		"\n" + pre + "# origin : " + origin +
-		"\n" + pre + "# angles : " + angles +
-		"\n" + pre + "# model  : " + assetName +
-		"\n" + pre + "# team   : " + team
-	#endif
+	foreach( k, v in contents )
+	{
+		string padding
+		for( int i = k.len(); i < LONGEST_KEY_LEN; i++ )
+		{
+			padding += " "
+		}
+		result += format( "\n%s# %s%s : %s", pre, k, padding, v )
+	}
+	return result
+}
+
+string function GetFormattedTeam( int team )
+{
+	switch ( team )
+	{
+		case TEAM_MILITIA:
+			return format( "militia (%i)", TEAM_MILITIA )
+		case TEAM_IMC:
+			return format( "imc (%i)", TEAM_IMC )
+		case TEAM_UNASSIGNED:
+			return format( "neutral (%i)", TEAM_UNASSIGNED )
+			break
+		default:
+			return format( "ffa %i", team )
+	}
+	unreachable
 }
 
 void function printall( ... )
