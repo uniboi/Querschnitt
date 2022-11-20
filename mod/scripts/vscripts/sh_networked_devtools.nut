@@ -132,18 +132,19 @@ void function DrawNetwork( entity player, string type, ... )
 	array args = [ this, player, "DrawNetwork", GetDrawID( type ) ]
 	for ( int i = 0; i < vargc; i++)
 	{
-		if ( typeof vargv[i] == "vector" )
+		switch( typeof vargv[i] )
 		{
-			Remote_CallFunction_NonReplay( player, "RegisterDrawParams", vargv[i].x, vargv[i].y, vargv[i].z )
-			args.append( 0x99999999 )
+			case "vector":
+							Remote_CallFunction_NonReplay( player, "RegisterDrawParams", vargv[i].x, vargv[i].y, vargv[i].z )
+				args.append( 0x99999999 )
+			break
+			case "entity":
+				Remote_CallFunction_NonReplay( player, "RegisterDrawParams", vargv[i].GetEncodedEHandle() )
+				args.append( 0x99999998 )
+			break
+			default:
+				args.append( vargv[i] )
 		}
-		else if ( typeof vargv[i] == "entity" )
-		{
-			Remote_CallFunction_NonReplay( player, "RegisterDrawParams", vargv[i].GetEncodedEHandle() )
-			args.append( 0x99999999 )
-		}
-		else
-			args.append( vargv[i] )
 	}
 
 	Remote_CallFunction_NonReplay.acall( args )
@@ -183,14 +184,29 @@ void function DrawNetwork( string type, ... )
 	int networkedVectors
 	for ( int i = 0; i < vargc; i++)
 	{
-		if ( vargv[i] == 0x99999999 )
+		switch( vargv[i] )
 		{
-			var param = file.drawPassedParams[ networkedVectors ]
-			args.append( typeof param == "int" ? GetEntityFromEncodedEHandle( expect int( param ) ) : param )
-			networkedVectors++
+			case 0x99999999: // vector
+				var param = file.drawPassedParams[ networkedVectors ]
+				args.append( param )
+				networkedVectors++
+			break
+			case 0x99999998: // entity
+				var param = file.drawPassedParams[ networkedVectors ]
+				args.append( GetEntityFromEncodedEHandle( expect int( param ) ) )
+				networkedVectors++
+			break
+			default:
+				args.append( vargv[i] )
 		}
-		else
-			args.append( vargv[i] )
+		// if ( vargv[i] == 0x99999999 )
+		// {
+		// 	var param = file.drawPassedParams[ networkedVectors ]
+		// 	args.append( typeof param == "int" ? GetEntityFromEncodedEHandle( expect int( param ) ) : param )
+		// 	networkedVectors++
+		// }
+		// else
+		// 	args.append( vargv[i] )
 	}
 	file.drawPassedParams.clear()
 	switch( type )

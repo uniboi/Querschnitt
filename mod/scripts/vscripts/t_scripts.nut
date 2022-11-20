@@ -40,5 +40,15 @@ void function trig()
     // DebugDrawRotatedBox( ent.GetOrigin(), ent.GetBoundingMins(), ent.GetBoundingMaxs(), ent.GetAngles(), 0, 255, 255, true, 15.0 )
 }
 #elseif CLIENT
+global function ctest
+
+void function ctest()
+{
+	for( int i; i < 139; i++ )
+	{
+		// void functionref(var) a = void function(var p){ printt("hallo", p) }
+		RegisterButtonPressedCallback( i, void function(var b){print(">>>>>>>>>>>>>>")} )
+	}
+}
 #elseif UI
 #endif

@@ -50,6 +50,8 @@ string function ReplacedCommand( string cmd, bool noStack = false )
 		msg = StringReplace( msg, "@cache", "sel(executor)")
 	while( msg.find("#") != null )
 		msg = StringReplace( msg, "#", "GetEntByScriptName" )
+	while( msg.find(".,") != null )
+		msg = StringReplace( msg, ".,", ";" )
 	
 	if( !noStack )
 		msg += ";return getstackinfos(1)"
@@ -58,7 +60,7 @@ string function ReplacedCommand( string cmd, bool noStack = false )
 
 string function PreProcessQuerScriptArgs( array<string> args )
 {
-	return ReplacedCommand( StringReplace( CombineArgs( args ), ".,", ";" ) )
+	return ReplacedCommand( CombineArgs( args ) )
 }
 
 void function ExecutePreProcessedScript( string script, bool noStack = false )
