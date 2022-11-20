@@ -17,9 +17,10 @@ bool function SERVERScriptSafeCallback( entity player, array<string> args )
 		return false
 	executor = player
 	args = ScriptCommandErrCallReplace( args )
-	string msg = ReplacedCommand( StringReplace( CombineArgs( args ), ":", ";" ) )
+	string script = PreProcessQuerScriptArgs( args )
 
-	errcall( "printinexplicit(" + msg + ")" )
+	ExecutePreProcessedScript( script )
+
 	executor = null
 	return true
 }

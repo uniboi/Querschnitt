@@ -6,14 +6,13 @@ global function NetworkedServerCommandUIScriptSafeCallback
 void function NetworkedServerCommandUIScriptSafeCallback( string script )
 {
 	executor = GetLocalClientPlayer()
-	errcall( script )
+	ExecutePreProcessedScript( script )
 	executor = null
 }
 #elseif CLIENT || SERVER
 global function DevTools_Network
 global function TraceFromEnt
 global function DrawNetwork
-global function ReplacedCommand
 #endif
 
 #if CLIENT
@@ -27,30 +26,6 @@ global function DrawGlobal
 #endif
 
 #if CLIENT || SERVER
-string function ReplacedCommand( string cmd )
-{
-	string msg = cmd
-	while( msg.find("@me") != null )
-		msg = StringReplace( msg, "@me", "executor")
-	while( msg.find("@all") != null )
-		msg = StringReplace( msg, "@all", "GetPlayerArray()" )
-	while( msg.find("@us") != null )
-		msg = StringReplace( msg, "@us", "GetPlayerArrayOfTeam(executor.GetTeam())")
-	while( msg.find("@that") != null )
-		msg = StringReplace( msg, "@that", "TraceFromEnt(executor).hitEnt" )
-	while( msg.find("@there") != null )
-		msg = StringReplace( msg, "@there", "TraceFromEnt(executor).endPos" )
-	while( msg.find("@trace") != null )
-		msg = StringReplace( msg, "@trace", "TraceFromEnt(executor)" )
-	while( msg.find("@here") != null )
-		msg = StringReplace( msg, "@here", "executor.GetOrigin()" )
-	while( msg.find("@cache") != null)
-		msg = StringReplace( msg, "@cache", "sel(executor)")
-	while( msg.find("#") != null )
-		msg = StringReplace( msg, "#", "GetEntByScriptName" )
-	return msg
-}
-
 void function DevTools_Network()
 {
 	AddCallback_OnRegisteringCustomNetworkVars( RegisterNetworkVars )
@@ -289,26 +264,14 @@ void function DrawNetwork( string type, ... )
 
 void function ServerCommandCLIENTScriptSafeCallback( array<string> args )
 {
-	string msg = format( "printinexplicit(function(){return %s}())", ReplacedCommand( StringReplace( CombineArgs( args ), ":", ";" ) ) )
 	executor = GetLocalClientPlayer()
-	// var result
-	// try {
-	// 	result = compilestring( msg )()
-	// } catch( e ) {
-	// 	result = "ERROR:" + e + "\n[PREPROCESSED] " + msg 
-	// }
-	// printinexplicit( result )
-	errcall( msg )
-	// printt(getstackinfos(1).locals)
-	// foreach( var p in getstackinfos(1).locals )
-	// 	print(p)
+	ExecutePreProcessedScript( PreProcessQuerScriptArgs( args ) )
 	executor = null
-	// errcall( "printinexplicit(" + msg + ")" )
 }
 
 void function ServerCommandUIScriptSafeCallback( array<string> args )
 {
-	string msg = format( "printinexplicit(function(){return %s}())", ReplacedCommand( StringReplace( CombineArgs( args ), ":", ";" ) ) )
+	string msg = PreProcessQuerScriptArgs( args )
 	RunUIScript( "NetworkedServerCommandUIScriptSafeCallback", msg )
 }
 #endif

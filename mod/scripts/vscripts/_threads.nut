@@ -54,6 +54,7 @@ bool function IsDeadCoroutine( var co ) {
 	return (co.getstatus() == "idle" || co.getstatus() == "error")
 }
 
+// TODO: handle cases when the total string is too long
 void function printt( ... )
 {
 	if ( vargc <= 0 )

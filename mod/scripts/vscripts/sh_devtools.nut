@@ -1,15 +1,112 @@
 untyped
 globalize_all_functions
 
+void function PrintQuerschnittHelp( string category )
+{
+	string msg
+	switch( category )
+	{
+		case "safeScript":
+		// squirrel table weirdness
+		table<string, string> macros
+		macros[ "@me" ] <- "the player that executed the command"
+		macros[ "@all" ] <- "all connected players"
+		macros[ "@us" ] <- "all players that share a team with the callee"
+		macros[ "@that" ] <- "the first entity the callee looks at"
+		macros[ "@there" ] <- "the position the callee looks at"
+		macros[ "@trace" ] <- "TraceResults from where the callee is looking"
+		macros[ "@cache" ] <- "the last entity the callee shot with an info gun"
+		macros[ "#" ] <- "shorthand for GetEntByScriptName"
+		msg +=  "the commands \"ss\", \"sc\" and \"su\" execute in SERVER, CLIENT or UI context.\n=== MACROS ===\n"
+		foreach( string macro, string description in macros )
+		{
+			msg += format( "%s : %s\n", macro, description )
+			// string too long lol
+			// msg += "\n=== SYNTAX ===\nStrings: Instead of\" to declare strings, use '\nStatements: instead of ; to seperate statements, use .,"
+		}
+		break
+	}
+	printt( msg )
+}
+
+string function ReplacedCommand( string cmd, bool noStack = false )
+{
+	string msg = cmd
+	while( msg.find("@me") != null )
+		msg = StringReplace( msg, "@me", "executor")
+	while( msg.find("@all") != null )
+		msg = StringReplace( msg, "@all", "GetPlayerArray()" )
+	while( msg.find("@us") != null )
+		msg = StringReplace( msg, "@us", "GetPlayerArrayOfTeam(executor.GetTeam())")
+	while( msg.find("@that") != null )
+		msg = StringReplace( msg, "@that", "TraceFromEnt(executor).hitEnt" )
+	while( msg.find("@there") != null )
+		msg = StringReplace( msg, "@there", "TraceFromEnt(executor).endPos" )
+	while( msg.find("@trace") != null )
+		msg = StringReplace( msg, "@trace", "TraceFromEnt(executor)" )
+	while( msg.find("@here") != null )
+		msg = StringReplace( msg, "@here", "executor.GetOrigin()" )
+	while( msg.find("@cache") != null)
+		msg = StringReplace( msg, "@cache", "sel(executor)")
+	while( msg.find("#") != null )
+		msg = StringReplace( msg, "#", "GetEntByScriptName" )
+	
+	if( !noStack )
+		msg += ";return getstackinfos(1)"
+	return msg
+}
+
+string function PreProcessQuerScriptArgs( array<string> args )
+{
+	return ReplacedCommand( StringReplace( CombineArgs( args ), ".,", ";" ) )
+}
+
+void function ExecutePreProcessedScript( string script, bool noStack = false )
+{
+	if( script == "help ;return getstackinfos(1)" )
+	{
+		PrintQuerschnittHelp( "safeScript" )
+		return
+	}
+	try {
+		var buffered = compilestring( script )()
+		if( "locals" in buffered )
+		{
+			table safeTable
+			foreach( k, v in buffered.locals )
+			{
+				safeTable[ string( k ) ] <- string( v )
+			}
+
+			delete safeTable[ "this" ]
+
+			printt( safeTable )
+		} else {
+			printt( format( "[INEXPLICIT] %s", allcontents( buffered ) ) )
+		}
+	} catch( e ) {
+		PrintPreProcessorError( e, script )
+		if( e == "Expression evaluates to a value that doesn't do anything" )
+		{
+			ExecutePreProcessedScript( "return " + script, true )
+		}
+	}
+}
+
+void function PrintPreProcessorError( var error, string pre )
+{
+	printt( format( "ERROR: %s\n[PREPROCESSED] %s", string( error ), pre ) )
+}
+
 void function errcall( string script, entity initiator = null )
 {
 	var result
 	try {
 		result = compilestring( script )()
+		printinexplicit( result )
 	} catch( e ) {
-		result = "ERROR:" + e + "\n[PREPROCESSED] " + script 
+		PrintPreProcessorError( e, script )
 	}
-	printinexplicit( result )
 }
 
 string function allcontents( var v, string pre = "" )
