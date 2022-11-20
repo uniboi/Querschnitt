@@ -1,32 +1,49 @@
 untyped
 globalize_all_functions
 
+struct QuerInfo {
+	string macro,
+	string desc
+}
+
+QuerInfo function AssembleQuerInfo( string macro, string desc )
+{
+	QuerInfo q
+	q.macro = macro
+	q.desc = desc
+	return q
+}
+
 void function PrintQuerschnittHelp( string category )
 {
-	string msg
 	switch( category )
 	{
 		case "safeScript":
 		// squirrel table weirdness
-		table<string, string> macros
-		macros[ "@me" ] <- "the player that executed the command"
-		macros[ "@all" ] <- "all connected players"
-		macros[ "@us" ] <- "all players that share a team with the callee"
-		macros[ "@that" ] <- "the first entity the callee looks at"
-		macros[ "@there" ] <- "the position the callee looks at"
-		macros[ "@trace" ] <- "TraceResults from where the callee is looking"
-		macros[ "@cache" ] <- "the last entity the callee shot with an info gun"
-		macros[ "#" ] <- "shorthand for GetEntByScriptName"
-		msg +=  "the commands \"ss\", \"sc\" and \"su\" execute in SERVER, CLIENT or UI context.\n=== MACROS ===\n"
-		foreach( string macro, string description in macros )
+		
+		array<QuerInfo> macros = [
+			AssembleQuerInfo( "@me", "the player that executed the command" )
+			AssembleQuerInfo( "@all", "all connected players" )
+			AssembleQuerInfo( "@us", "all players that share a team with the callee" )
+			AssembleQuerInfo( "@that", "the first entity the callee looks at")
+			AssembleQuerInfo( "@there", "the position the callee looks at" )
+			AssembleQuerInfo( "@trace", "TraceResults from where the callee is looking" )
+			AssembleQuerInfo( "@cache", "the last entity the callee shot with an info gun" )
+			AssembleQuerInfo( "#", "shorthand for GetEntByScriptName" )
+			AssembleQuerInfo( "_ ", "shorthand for return" )
+		]
+
+		print( "the commands \"ss\", \"sc\" and \"su\" execute in SERVER, CLIENT or UI context." )
+
+		foreach( QuerInfo q in macros )
 		{
-			msg += format( "%s : %s\n", macro, description )
-			// string too long lol
-			// msg += "\n=== SYNTAX ===\nStrings: Instead of\" to declare strings, use '\nStatements: instead of ; to seperate statements, use .,"
+			print( format( "%s : %s", q.macro, q.desc ) )
 		}
+		print( "=== SYNTAX ===")
+		print( "Strings: Instead of\" to declare strings, use '" )
+		print( "Statements: instead of ; to seperate statements, use .," )
 		break
 	}
-	printt( msg )
 }
 
 string function ReplacedCommand( string cmd, bool noStack = false )
@@ -52,6 +69,8 @@ string function ReplacedCommand( string cmd, bool noStack = false )
 		msg = StringReplace( msg, "#", "GetEntByScriptName" )
 	while( msg.find(".,") != null )
 		msg = StringReplace( msg, ".,", ";" )
+	while( msg.find("_ ") != null )
+		msg = StringReplace( msg, "_ ", "return " )
 	
 	if( !noStack )
 		msg += ";return getstackinfos(1)"
@@ -72,7 +91,7 @@ void function ExecutePreProcessedScript( string script, bool noStack = false )
 	}
 	try {
 		var buffered = compilestring( script )()
-		if( "locals" in buffered )
+		if( "locals" in buffered && buffered.locals.len() > 1 )
 		{
 			table safeTable
 			foreach( k, v in buffered.locals )
@@ -84,7 +103,8 @@ void function ExecutePreProcessedScript( string script, bool noStack = false )
 
 			printt( safeTable )
 		} else {
-			printt( format( "[INEXPLICIT] %s", allcontents( buffered ) ) )
+			if( buffered )
+				printt( format( "[INEXPLICIT] %s", allcontents( buffered ) ) )
 		}
 	} catch( e ) {
 		PrintPreProcessorError( e, script )
