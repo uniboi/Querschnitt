@@ -30,7 +30,16 @@
 		},
 		{
 			"Path": "sh_devtools.nut",
-			"RunOn": "SERVER || CLIENT || UI"
+			"RunOn": "SERVER || CLIENT || UI",
+			"ClientCallback": {
+				"Before": "InitQuerschnittMacros"
+			},
+			"ServerCallback": {
+				"Before": "InitQuerschnittMacros"
+			},
+			"UICallback": {
+				"Before": "InitQuerschnittMacros"
+			}
 		},
 		{
 			"Path": "t_scripts.nut",

@@ -39,6 +39,7 @@ void function RegisterNetworkVars()
 	#if CLIENT
 	AddServerToClientStringCommandCallback( "scc", ServerCommandCLIENTScriptSafeCallback )
 	AddServerToClientStringCommandCallback( "suc", ServerCommandUIScriptSafeCallback )
+	AddServerToClientStringCommandCallback( "nds", NetworkedDrawParameterStringCommandCallback )
 	#endif
 }
 
@@ -135,12 +136,16 @@ void function DrawNetwork( entity player, string type, ... )
 		switch( typeof vargv[i] )
 		{
 			case "vector":
-							Remote_CallFunction_NonReplay( player, "RegisterDrawParams", vargv[i].x, vargv[i].y, vargv[i].z )
+				Remote_CallFunction_NonReplay( player, "RegisterDrawParams", vargv[i].x, vargv[i].y, vargv[i].z )
 				args.append( 0x99999999 )
 			break
 			case "entity":
 				Remote_CallFunction_NonReplay( player, "RegisterDrawParams", vargv[i].GetEncodedEHandle() )
 				args.append( 0x99999998 )
+			break
+			case "string":
+				ServerToClientStringCommand( player, format( "nds %s", expect string( vargv[i] ) ) )
+				args.append( 0x99999997 )
 			break
 			default:
 				args.append( vargv[i] )
@@ -196,6 +201,12 @@ void function DrawNetwork( string type, ... )
 				args.append( GetEntityFromEncodedEHandle( expect int( param ) ) )
 				networkedVectors++
 			break
+			// case 0x99999997: // string
+			// 	// var param = file.drawPassedParams[ networkedVectors ]
+			// 	// args.append( param )
+			// 	// networkedVectors++
+			// 	args.append("DEBUG -- DEBUG")
+			// break
 			default:
 				args.append( vargv[i] )
 		}
@@ -289,5 +300,15 @@ void function ServerCommandUIScriptSafeCallback( array<string> args )
 {
 	string msg = PreProcessQuerScriptArgs( args )
 	RunUIScript( "NetworkedServerCommandUIScriptSafeCallback", msg )
+}
+
+void function NetworkedDrawParameterStringCommandCallback( array<string> args )
+{
+	string reAssembled
+	foreach( string arg in args )
+	{
+		reAssembled += format( "%s ", arg )
+	}
+	file.drawPassedParams.append( reAssembled )
 }
 #endif

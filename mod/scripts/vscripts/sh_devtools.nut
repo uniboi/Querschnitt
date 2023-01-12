@@ -1,17 +1,33 @@
 untyped
 globalize_all_functions
 
-struct QuerInfo {
-	string macro,
-	string desc
+struct MacroInfo {
+	string script,
+	string desc,
 }
 
-QuerInfo function AssembleQuerInfo( string macro, string desc )
+MacroInfo function _MacroInfo( string script, string desc )
 {
-	QuerInfo q
-	q.macro = macro
-	q.desc = desc
-	return q
+	MacroInfo m
+	m.script = script
+	m.desc = desc
+	return m
+}
+
+table<string, MacroInfo> macros
+
+void function InitQuerschnittMacros()
+{
+	macros["@me"] <- _MacroInfo( "executor", "the player that executed the command" )
+	macros["@all"] <- _MacroInfo( "GetPlayerArray()", "all connected players" )
+	macros["@us"] <- _MacroInfo( "GetPlayerArrayOfTeam(executor.GetTeam())", "all players that share a team with the callee" )
+	macros["@here"] <- _MacroInfo( "executor.GetOrigin()", "the executing players position" )
+	macros["@that"] <- _MacroInfo( "TraceFromEnt(executor).hitEnt", "the first entity the callee looks at" )
+	macros["@there"] <- _MacroInfo( "TraceFromEnt(executor).endPos", "the position the callee looks at" )
+	macros["@trace"] <- _MacroInfo( "TraceFromEnt(executor)", "TraceResults from where the callee is looking" )
+	macros["@cache"] <- _MacroInfo( "sel(executor)", "the last entity the callee shot with an info gun" )
+	macros["#"] <- _MacroInfo( "GetEntByScriptName", "shorthand for GetEntByScriptName" )
+	macros["_ "] <- _MacroInfo( "return", "shorthand for return" )
 }
 
 void function PrintQuerschnittHelp( string category )
@@ -19,26 +35,13 @@ void function PrintQuerschnittHelp( string category )
 	switch( category )
 	{
 		case "safeScript":
-		// squirrel table weirdness
-		
-		array<QuerInfo> macros = [
-			AssembleQuerInfo( "@me", "the player that executed the command" )
-			AssembleQuerInfo( "@all", "all connected players" )
-			AssembleQuerInfo( "@us", "all players that share a team with the callee" )
-			AssembleQuerInfo( "@that", "the first entity the callee looks at")
-			AssembleQuerInfo( "@there", "the position the callee looks at" )
-			AssembleQuerInfo( "@trace", "TraceResults from where the callee is looking" )
-			AssembleQuerInfo( "@cache", "the last entity the callee shot with an info gun" )
-			AssembleQuerInfo( "#", "shorthand for GetEntByScriptName" )
-			AssembleQuerInfo( "_ ", "shorthand for return" )
-		]
-
 		print( "the commands \"ss\", \"sc\" and \"su\" execute in SERVER, CLIENT or UI context." )
 
-		foreach( QuerInfo q in macros )
+		foreach( string k, MacroInfo q in macros )
 		{
-			print( format( "%s : %s", q.macro, q.desc ) )
+			print( format( "%s : %s", k, q.desc ) )
 		}
+		
 		print( "=== SYNTAX ===")
 		print( "Strings: Instead of\" to declare strings, use '" )
 		print( "Statements: instead of ; to seperate statements, use .," )
@@ -49,31 +52,16 @@ void function PrintQuerschnittHelp( string category )
 string function ReplacedCommand( string cmd, bool noStack = false )
 {
 	string msg = cmd
-	while( msg.find("@me") != null )
-		msg = StringReplace( msg, "@me", "executor")
-	while( msg.find("@all") != null )
-		msg = StringReplace( msg, "@all", "GetPlayerArray()" )
-	while( msg.find("@us") != null )
-		msg = StringReplace( msg, "@us", "GetPlayerArrayOfTeam(executor.GetTeam())")
-	while( msg.find("@that") != null )
-		msg = StringReplace( msg, "@that", "TraceFromEnt(executor).hitEnt" )
-	while( msg.find("@there") != null )
-		msg = StringReplace( msg, "@there", "TraceFromEnt(executor).endPos" )
-	while( msg.find("@trace") != null )
-		msg = StringReplace( msg, "@trace", "TraceFromEnt(executor)" )
-	while( msg.find("@here") != null )
-		msg = StringReplace( msg, "@here", "executor.GetOrigin()" )
-	while( msg.find("@cache") != null)
-		msg = StringReplace( msg, "@cache", "sel(executor)")
-	while( msg.find("#") != null )
-		msg = StringReplace( msg, "#", "GetEntByScriptName" )
-	while( msg.find(".,") != null )
-		msg = StringReplace( msg, ".,", ";" )
-	while( msg.find("_ ") != null )
-		msg = StringReplace( msg, "_ ", "return " )
+
+	foreach( string macro, MacroInfo info in macros )
+	{
+		while( msg.find( macro ) != null )
+			msg = StringReplace( msg, macro, info.script )
+	}
 	
 	if( !noStack )
 		msg += ";return getstackinfos(1)"
+
 	return msg
 }
 
