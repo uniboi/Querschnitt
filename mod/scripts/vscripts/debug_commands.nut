@@ -31,6 +31,7 @@ void function DebugCommandsInit()
 	qeCommands["su"] <- _QeCommand( UIScriptSafeCallback, "safe UI scripts" )
 	qeCommands["grunt"] <- _QeCommand( SpawnGruntCallback, "spawn an enemy grunt", ["--team"], ["-titan"] )
 	qeCommands["qs"] <- _QeCommand( QuerschnittHelpcallback, "command infos", ["--<command>"] )
+	qeCommands["clear"] <- _QeCommand( ClearConsoleWindow, "clears the console" )
 
 	foreach( command, ref in qeCommands )
 	{
@@ -139,6 +140,18 @@ execute 'qs --<command>' for more info
 		}
 	}
 
+	return true
+}
+
+bool function ClearConsoleWindow( entity player, array<string> args )
+{
+	string msg = ""
+	for( int i; i < 61; i++ )
+	{
+		msg += "\n"
+	}
+
+	printt( msg )
 	return true
 }
 
