@@ -26,11 +26,11 @@ QeCommand function _QeCommand( bool functionref( entity, array<string> ) callbac
 
 void function DebugCommandsInit()
 {
-	qeCommands["ss"] <- _QeCommand( SERVERScriptSafeCallback, "safe SERVER scripts" )
-	qeCommands["sc"] <- _QeCommand( CLIENTScriptSafeCallback, "safe CLIENT scripts" )
-	qeCommands["su"] <- _QeCommand( UIScriptSafeCallback, "safe UI scripts" )
+	qeCommands["ss"] <- _QeCommand( SERVERScriptSafeCallback, "safe SERVER scripts. Use ' for strings instead of \"", ["<script>"] )
+	qeCommands["sc"] <- _QeCommand( CLIENTScriptSafeCallback, "safe CLIENT scripts. Use ' for strings instead of \"", ["<script>"] )
+	qeCommands["su"] <- _QeCommand( UIScriptSafeCallback, "safe UI scripts. Use ' for strings instead of \"", ["<script>"] )
 	qeCommands["grunt"] <- _QeCommand( SpawnGruntCallback, "spawn an enemy grunt", ["--team"], ["-titan"] )
-	qeCommands["qs"] <- _QeCommand( QuerschnittHelpcallback, "command infos", ["--<command>"] )
+	qeCommands["qs"] <- _QeCommand( QuerschnittHelpcallback, "command infos", ["<command>"] )
 	qeCommands["clear"] <- _QeCommand( ClearConsoleWindow, "clears the console" )
 
 	foreach( command, ref in qeCommands )
@@ -123,7 +123,7 @@ bool function QuerschnittHelpcallback( entity player, array<string> args )
 	{
 		string msg =
 @"=== Querschnit Info ===
-execute 'qs --<command>' for more info
+execute 'qs <command>' for more info
 === all commands ==="
 		foreach( cmd, info in qeCommands )
 		{
@@ -134,10 +134,8 @@ execute 'qs --<command>' for more info
 	
 	foreach( arg in args )
 	{
-		if( arg.find( "--" ) == 0 )
-		{
-			PrintQEInfo( arg.slice( 2, arg.len() ) )
-		}
+		PrintQEInfo( arg )
+		PrintQuerschnittHelp( arg )
 	}
 
 	return true
@@ -157,6 +155,11 @@ bool function ClearConsoleWindow( entity player, array<string> args )
 
 void function PrintQEInfo( string cmd )
 {
+	if( !(cmd in qeCommands) )
+	{
+		printt( "COMMAND NOT FOUND" )
+		return
+	}
 	QeCommand qe = qeCommands[ cmd ]
 	string msg = format( "%s - %s\n=== options ===", cmd, qe.description )
 	foreach( option in qe.options )

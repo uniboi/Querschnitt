@@ -34,7 +34,9 @@ void function PrintQuerschnittHelp( string category )
 {
 	switch( category )
 	{
-		case "safeScript":
+		case "ss":
+		case "sc":
+		case "su":
 		print( "the commands \"ss\", \"sc\" and \"su\" execute in SERVER, CLIENT or UI context." )
 
 		foreach( string k, MacroInfo q in macros )
@@ -74,7 +76,7 @@ void function ExecutePreProcessedScript( string script, bool noStack = false )
 {
 	if( script == "help ;return getstackinfos(1)" )
 	{
-		PrintQuerschnittHelp( "safeScript" )
+		PrintQuerschnittHelp( "ss" )
 		return
 	}
 	try {
